@@ -1,0 +1,143 @@
+@import "tailwindcss";
+
+/* Enable class-based dark mode so next-themes can toggle it on <html>. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Visa Advisor visual direction
+ * Mood: playful & optimistic, travel-zine
+ * Primary: teal / seafoam
+ * Accent:  soft coral
+ * Verdict: emerald / amber / rose (kept independent of brand)
+ */
+
+:root {
+  /* neutrals (warm, not gray) */
+  --background: #fafaf9;          /* warm off-white */
+  --foreground: #1c1917;          /* warm near-black */
+  --muted: #f5f5f4;
+  --muted-foreground: #57534e;
+  --card: #ffffff;
+  --card-foreground: #1c1917;
+  --border: #e7e5e4;
+  --input: #e7e5e4;
+  --ring: #14b8a6;
+
+  /* brand (teal) */
+  --brand-50:  #f0fdfa;
+  --brand-100: #ccfbf1;
+  --brand-200: #99f6e4;
+  --brand-300: #5eead4;
+  --brand-400: #2dd4bf;
+  --brand-500: #14b8a6;
+  --brand-600: #0d9488;
+  --brand-700: #0f766e;
+  --brand-800: #115e59;
+  --brand-900: #134e4a;
+  --brand-950: #042f2e;
+
+  /* accent (soft coral) */
+  --accent: #fb7185;
+  --accent-foreground: #ffffff;
+
+  /* verdict colors (independent of brand, AA contrast in both modes) */
+  --verdict-ok: #10b981;          /* emerald */
+  --verdict-ok-foreground: #ffffff;
+  --verdict-warn: #f59e0b;        /* amber */
+  --verdict-warn-foreground: #111827;
+  --verdict-stop: #e11d48;        /* rose */
+  --verdict-stop-foreground: #ffffff;
+}
+
+.dark {
+  --background: #0c0a09;          /* warm near-black */
+  --foreground: #f5f5f4;
+  --muted: #1c1917;
+  --muted-foreground: #a8a29e;
+  --card: #1c1917;
+  --card-foreground: #f5f5f4;
+  --border: #292524;
+  --input: #292524;
+  --ring: #2dd4bf;
+
+  /* brand shifts brighter in dark mode for readability */
+  --brand-50:  #042f2e;
+  --brand-100: #134e4a;
+  --brand-200: #115e59;
+  --brand-300: #0f766e;
+  --brand-400: #0d9488;
+  --brand-500: #14b8a6;
+  --brand-600: #2dd4bf;
+  --brand-700: #5eead4;
+  --brand-800: #99f6e4;
+  --brand-900: #ccfbf1;
+  --brand-950: #f0fdfa;
+
+  --accent: #fb7185;
+  --accent-foreground: #1c1917;
+
+  --verdict-ok: #34d399;
+  --verdict-ok-foreground: #052e1f;
+  --verdict-warn: #fbbf24;
+  --verdict-warn-foreground: #1c1917;
+  --verdict-stop: #fb7185;
+  --verdict-stop-foreground: #1c1917;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-200: var(--brand-200);
+  --color-brand-300: var(--brand-300);
+  --color-brand-400: var(--brand-400);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+  --color-brand-800: var(--brand-800);
+  --color-brand-900: var(--brand-900);
+  --color-brand-950: var(--brand-950);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-verdict-ok: var(--verdict-ok);
+  --color-verdict-ok-foreground: var(--verdict-ok-foreground);
+  --color-verdict-warn: var(--verdict-warn);
+  --color-verdict-warn-foreground: var(--verdict-warn-foreground);
+  --color-verdict-stop: var(--verdict-stop);
+  --color-verdict-stop-foreground: var(--verdict-stop-foreground);
+
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-fraunces);
+
+  --radius: 1rem;
+}
+
+html {
+  color-scheme: light dark;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: "ss01", "cv11";
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.font-display {
+  font-family: var(--font-fraunces), ui-serif, Georgia, serif;
+  font-optical-sizing: auto;
+  letter-spacing: -0.01em;
+}
