@@ -21,6 +21,6 @@ export async function GET(req: Request) {
     );
   }
 
-  const records = getRecords(country);
+  const records = await getRecords(country);
   return NextResponse.json({ country, records });
 }

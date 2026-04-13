@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getGemini, MODELS } from "@/lib/gemini";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
+import { kvGet, kvSet } from "@/lib/kv";
 import {
   VisaAdviceInputSchema,
   VisaAdviceResponseSchema,
@@ -15,27 +16,7 @@ export const runtime = "nodejs";
 // We call an external LLM; never cache the route itself.
 export const dynamic = "force-dynamic";
 
-/**
- * In-memory cache for local dev only. In production this is replaced with
- * Vercel KV (see lib/visa-advice/cache.ts in a later milestone). Keyed by
- * normalized input fingerprint so "5 days" and "6 days" hit the same entry.
- */
-const DEV_CACHE = new Map<string, { value: VisaAdviceResponse; ts: number }>();
-const DEV_CACHE_TTL_MS = 1000 * 60 * 60 * 24; // 24h
-
-function devCacheGet(key: string): VisaAdviceResponse | null {
-  const hit = DEV_CACHE.get(key);
-  if (!hit) return null;
-  if (Date.now() - hit.ts > DEV_CACHE_TTL_MS) {
-    DEV_CACHE.delete(key);
-    return null;
-  }
-  return hit.value;
-}
-
-function devCacheSet(key: string, value: VisaAdviceResponse): void {
-  DEV_CACHE.set(key, { value, ts: Date.now() });
-}
+const CACHE_TTL = 7 * 24 * 60 * 60; // 7 days in seconds
 
 /**
  * Gemini often wraps JSON in ```json fences despite instructions. Strip them
@@ -110,8 +91,8 @@ export async function POST(req: Request) {
   }
   const input = parsed.data;
 
-  const key = cacheKey(input);
-  const cached = devCacheGet(key);
+  const key = `visa:${cacheKey(input)}`;
+  const cached = await kvGet<VisaAdviceResponse>(key);
   if (cached) {
     return NextResponse.json(cached, {
       headers: { "x-visa-advice-cache": "hit" },
@@ -222,7 +203,7 @@ export async function POST(req: Request) {
     };
   }
 
-  devCacheSet(key, finalResponse);
+  await kvSet(key, finalResponse, CACHE_TTL);
 
   return NextResponse.json(finalResponse, {
     headers: { "x-visa-advice-cache": "miss" },

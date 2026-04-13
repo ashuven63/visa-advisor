@@ -4,6 +4,8 @@ import { DisclaimerBanner } from "@/components/disclaimer-banner";
 import { ResultsView } from "@/components/results-view";
 import { parseInputFromSearch } from "@/lib/visa-advice/parse-input";
 import { PhotoTool } from "@/components/photo-tool";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { AdSlot } from "@/components/ad-slot";
 
 // Next.js 16: searchParams is a Promise in server components.
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -26,14 +28,18 @@ export default async function ResultsPage({
           >
             &larr; Edit trip
           </Link>
-          <p className="text-xs font-medium uppercase tracking-[0.2em] text-brand-600 dark:text-brand-400">
-            Visa Advisor
-          </p>
+          <div className="flex items-center gap-3">
+            <p className="text-xs font-medium uppercase tracking-[0.2em] text-brand-600 dark:text-brand-400">
+              Visa Advisor
+            </p>
+            <ThemeToggle />
+          </div>
         </div>
 
         {input ? (
           <>
             <ResultsView input={input} />
+            <AdSlot slot="results-mid" format="horizontal" className="my-2" />
             <PhotoTool country={input.destination} />
             <DisclaimerBanner className="opacity-60 text-xs" />
           </>

@@ -43,10 +43,22 @@ const VERDICT_HEADLINE: Record<Verdict, string> = {
   required: "You need a visa before you travel.",
 };
 
-export function ResultsView({ input }: { input: VisaAdviceInput }) {
-  const [state, setState] = useState<LoadState>({ status: "idle" });
+export function ResultsView({
+  input,
+  initialData,
+}: {
+  input: VisaAdviceInput;
+  /** Pass pre-fetched data to skip the API call (used by shared result pages). */
+  initialData?: VisaAdviceResponse;
+}) {
+  const [state, setState] = useState<LoadState>(
+    initialData ? { status: "ready", data: initialData } : { status: "idle" },
+  );
 
   useEffect(() => {
+    // Skip fetch if we already have data (e.g. from a shared link).
+    if (initialData) return;
+
     const controller = new AbortController();
     setState({ status: "loading" });
 
@@ -82,7 +94,7 @@ export function ResultsView({ input }: { input: VisaAdviceInput }) {
     })();
 
     return () => controller.abort();
-  }, [input]);
+  }, [input, initialData]);
 
   return (
     <div className="flex flex-col gap-6">

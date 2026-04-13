@@ -16,7 +16,9 @@ type AnalyticsEvent =
   | { name: "photo_fix_completed"; destination: string }
   | { name: "export_pdf"; destination: string }
   | { name: "export_email"; destination: string }
-  | { name: "export_share_link"; destination: string };
+  | { name: "export_share_link"; destination: string }
+  | { name: "exit_intent_shown"; destination: string }
+  | { name: "exit_intent_affiliate_click"; destination: string };
 
 /**
  * Track a product event. Safe to call from client code — it dynamically

@@ -210,19 +210,3 @@ export function countryName(code: string): string {
   return COUNTRIES.find((c) => c.code === code)?.name ?? code;
 }
 
-/**
- * Short list of "major visas one commonly holds" for the multi-select on the
- * form. Curated rather than exhaustive — these are the visas that most often
- * unlock exemptions at other destinations.
- */
-export const HELD_VISA_OPTIONS = [
-  { id: "US_B1B2", label: "US visa (B1/B2 or similar)" },
-  { id: "SCHENGEN", label: "Schengen visa" },
-  { id: "UK", label: "UK visa" },
-  { id: "CANADA", label: "Canada visa" },
-  { id: "JAPAN", label: "Japan visa" },
-  { id: "AUSTRALIA", label: "Australia visa" },
-  { id: "UAE", label: "UAE residence / visa" },
-] as const;
-
-export type HeldVisaId = (typeof HELD_VISA_OPTIONS)[number]["id"];

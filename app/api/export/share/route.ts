@@ -1,15 +1,12 @@
 import { NextResponse } from "next/server";
 import { VisaAdviceResponseSchema } from "@/lib/visa-advice/schema";
+import { kvGet, kvSet } from "@/lib/kv";
 import { z } from "zod";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/**
- * In-memory share-code store (replaced by Vercel KV in production).
- * Maps short code → JSON blob of { input, data }.
- */
-const SHARES = new Map<string, { input: unknown; data: unknown; ts: number }>();
+const SHARE_TTL = 30 * 24 * 60 * 60; // 30 days
 
 function randomCode(): string {
   const chars = "abcdefghijkmnpqrstuvwxyz23456789"; // no ambiguous 0/O/1/l
@@ -46,11 +43,11 @@ export async function POST(req: Request) {
   }
 
   const code = randomCode();
-  SHARES.set(code, {
-    input: parsed.data.input,
-    data: parsed.data.data,
-    ts: Date.now(),
-  });
+  await kvSet(
+    `share:${code}`,
+    { input: parsed.data.input, data: parsed.data.data },
+    SHARE_TTL,
+  );
 
   const base =
     process.env.NEXT_PUBLIC_APP_URL ??
@@ -73,7 +70,9 @@ export async function GET(req: Request) {
     );
   }
 
-  const entry = SHARES.get(code);
+  const entry = await kvGet<{ input: unknown; data: unknown }>(
+    `share:${code}`,
+  );
   if (!entry) {
     return NextResponse.json(
       { error: "Share link not found or expired." },

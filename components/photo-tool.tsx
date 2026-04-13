@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -235,6 +235,13 @@ function PhotoReportView({
           ? "Your photo meets the requirements."
           : "Your photo has issues that need attention."}
       </div>
+
+      {report.mechanicalOnly && (
+        <p className="text-xs text-muted-foreground">
+          Fix the issues above and re-upload — we&apos;ll then run a full
+          compliance check including face position, expression, and background.
+        </p>
+      )}
 
       <ul className="flex flex-col gap-2">
         {report.checks.map((c) => (

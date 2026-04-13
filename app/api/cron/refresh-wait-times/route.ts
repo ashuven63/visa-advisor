@@ -29,8 +29,8 @@ export async function GET(req: Request) {
   for (const source of ALL_SOURCES) {
     try {
       const records = await source.fetch();
-      setRecords(source.country, records);
-      setLastRefresh(source.id);
+      await setRecords(source.country, records);
+      await setLastRefresh(source.id);
       results.push({
         id: source.id,
         country: source.country,

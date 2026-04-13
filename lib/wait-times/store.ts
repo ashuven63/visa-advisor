@@ -1,31 +1,27 @@
+import { kvGet, kvSet } from "@/lib/kv";
 import type { WaitTimeRecord } from "./types";
 
-/**
- * In-memory wait-time store (replaced by Vercel KV in production).
- * Keyed by "{country}:{category}" for quick lookup.
- */
-const STORE = new Map<string, WaitTimeRecord[]>();
-const REFRESH_LOG = new Map<string, string>(); // sourceId → ISO timestamp
+const WAIT_TTL = 24 * 60 * 60; // 24 hours
 
 function storeKey(country: string): string {
-  return country.toUpperCase();
+  return `wait:${country.toUpperCase()}`;
 }
 
-export function getRecords(country: string): WaitTimeRecord[] {
-  return STORE.get(storeKey(country)) ?? [];
+export async function getRecords(country: string): Promise<WaitTimeRecord[]> {
+  return (await kvGet<WaitTimeRecord[]>(storeKey(country))) ?? [];
 }
 
-export function setRecords(
+export async function setRecords(
   country: string,
   records: WaitTimeRecord[],
-): void {
-  STORE.set(storeKey(country), records);
+): Promise<void> {
+  await kvSet(storeKey(country), records, WAIT_TTL);
 }
 
-export function getLastRefresh(sourceId: string): string | null {
-  return REFRESH_LOG.get(sourceId) ?? null;
+export async function getLastRefresh(sourceId: string): Promise<string | null> {
+  return kvGet<string>(`wait-refresh:${sourceId}`);
 }
 
-export function setLastRefresh(sourceId: string): void {
-  REFRESH_LOG.set(sourceId, new Date().toISOString());
+export async function setLastRefresh(sourceId: string): Promise<void> {
+  await kvSet(`wait-refresh:${sourceId}`, new Date().toISOString(), WAIT_TTL);
 }

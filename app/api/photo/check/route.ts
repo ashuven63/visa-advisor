@@ -65,18 +65,24 @@ export async function POST(req: Request) {
   // Run mechanical checks first — they're fast and free.
   const mechanical = await mechanicalChecks(buffer, spec);
 
-  // If the photo format is not even valid, skip expensive checks.
-  const formatCheck = mechanical.find((c) => c.id === "file-type");
-  if (formatCheck?.status === "fail") {
+  // If any mechanical check fails hard (file type, dimensions, color mode),
+  // skip the expensive Gemini LLM call entirely. The user needs to fix the
+  // basics first — no point paying for vision on a 100x100 BMP.
+  const hasHardMechanicalFail = mechanical.some(
+    (c) => c.status === "fail" && ["file-type", "pixel-dimensions", "color-mode", "file-size"].includes(c.id),
+  );
+
+  if (hasHardMechanicalFail) {
     const report: PhotoReport = {
       overall: "fail",
+      mechanicalOnly: true,
       checks: mechanical,
       spec,
     };
     return NextResponse.json(report);
   }
 
-  // Run face detection and LLM judgment in parallel.
+  // Mechanical checks passed or only have soft warnings — run LLM judgment.
   const [face, llm] = await Promise.all([
     faceChecks(buffer, spec),
     llmJudgment(buffer, spec).catch((): PhotoCheck[] => []),

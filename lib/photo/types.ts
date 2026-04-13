@@ -37,6 +37,8 @@ export interface PhotoCheck {
 /** Full photo compliance report combining mechanical + LLM checks. */
 export interface PhotoReport {
   overall: "pass" | "fail";
+  /** True if only mechanical checks were run (LLM skipped due to hard failure). */
+  mechanicalOnly?: boolean;
   checks: PhotoCheck[];
   spec: CountryPhotoSpec;
 }

@@ -1,14 +1,25 @@
 import { VisaForm } from "@/components/visa-form";
 import { DisclaimerBanner } from "@/components/disclaimer-banner";
+import { ThemeToggle } from "@/components/theme-toggle";
+import {
+  StructuredData,
+  HOME_FAQ_SCHEMA,
+  WEB_APP_SCHEMA,
+} from "@/components/structured-data";
 
 export default function Home() {
   return (
     <main className="flex flex-1 flex-col items-center px-4 py-10 sm:py-16">
+      <StructuredData data={HOME_FAQ_SCHEMA} />
+      <StructuredData data={WEB_APP_SCHEMA} />
       <div className="w-full max-w-3xl flex flex-col gap-10">
         <header className="flex flex-col gap-4 text-center sm:text-left">
-          <p className="text-sm font-medium uppercase tracking-[0.2em] text-brand-600 dark:text-brand-400">
-            Visa Advisor
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium uppercase tracking-[0.2em] text-brand-600 dark:text-brand-400">
+              Visa Advisor
+            </p>
+            <ThemeToggle />
+          </div>
           <h1 className="font-display text-4xl font-medium leading-tight tracking-tight sm:text-6xl">
             Do you need a <span className="text-brand-600 dark:text-brand-400">visa</span> for your next trip?
           </h1>

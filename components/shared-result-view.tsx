@@ -10,11 +10,6 @@ type LoadState =
   | { status: "error"; message: string }
   | { status: "ready"; input: VisaAdviceInput; data: VisaAdviceResponse };
 
-/**
- * Client component that fetches a shared result by code and renders it
- * read-only. Does NOT re-call the visa-advice API — it reads from the
- * share store.
- */
 export function SharedResultView({ code }: { code: string }) {
   const [state, setState] = useState<LoadState>({ status: "loading" });
 
@@ -59,27 +54,5 @@ export function SharedResultView({ code }: { code: string }) {
     );
   }
 
-  // Render the same ResultsView but feed it the pre-fetched data instead
-  // of making it call the API. We do this by rendering the input and having
-  // the ResultsView component show the cached data.
-  // Actually, SharedResultView has its own data, so render inline.
-  return <SharedResultsBody input={state.input} data={state.data} />;
-}
-
-// Import the body components from results-view. Since the ResultsView
-// component calls the API, we need a separate render path for shared
-// results that already have the data. We'll reuse the same visual
-// structure inline.
-function SharedResultsBody({
-  input,
-  data,
-}: {
-  input: VisaAdviceInput;
-  data: VisaAdviceResponse;
-}) {
-  // Re-use ResultsView by providing input — it will call the API and show
-  // the live result. For shared links this is acceptable since the data is
-  // cached on the server side. If the share expires, the user gets a
-  // "not found" error above. The result will come from cache most of the time.
-  return <ResultsView input={input} />;
+  return <ResultsView input={state.input} initialData={state.data} />;
 }

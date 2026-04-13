@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { COUNTRIES } from "@/lib/countries";
+import { ExitIntentOverlay } from "@/components/exit-intent-overlay";
 import type { VisaAdviceInput } from "@/lib/visa-advice/schema";
 
 type FormState = {
@@ -32,6 +33,14 @@ export function VisaForm({ initial }: { initial?: Partial<FormState> }) {
   const [state, setState] = useState<FormState>({ ...DEFAULT_STATE, ...initial });
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  const filledCount = [
+    state.destination,
+    state.residence,
+    state.passport,
+    state.days !== "7" ? state.days : "",
+    state.heldVisas,
+  ].filter(Boolean).length;
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -71,6 +80,8 @@ export function VisaForm({ initial }: { initial?: Partial<FormState> }) {
   }
 
   return (
+    <>
+    <ExitIntentOverlay filledCount={filledCount} />
     <Card className="w-full">
       <CardContent>
         <form onSubmit={onSubmit} className="flex flex-col gap-6">
@@ -161,6 +172,7 @@ export function VisaForm({ initial }: { initial?: Partial<FormState> }) {
         </form>
       </CardContent>
     </Card>
+    </>
   );
 }
 
