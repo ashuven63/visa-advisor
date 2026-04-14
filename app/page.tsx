@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { VisaForm } from "@/components/visa-form";
 import { DisclaimerBanner } from "@/components/disclaimer-banner";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -34,6 +35,25 @@ export default function Home() {
         <VisaForm />
 
         <AdSlot slot="3294860321" format="horizontal" className="my-2" />
+
+        {/* Photo tool CTA */}
+        <div className="rounded-2xl border border-border bg-card p-6 text-center sm:text-left">
+          <h2 className="font-display text-xl font-medium">
+            Need a compliant passport photo?
+          </h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Upload your photo for a free instant check against official
+            requirements — and auto-fix any issues with AI.
+          </p>
+          <div className="mt-4">
+            <Link
+              href="/photo"
+              className="inline-flex items-center rounded-full bg-brand-500 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-brand-600"
+            >
+              Check your photo free &rarr;
+            </Link>
+          </div>
+        </div>
 
         <DisclaimerBanner className="opacity-60 text-xs" />
       </div>

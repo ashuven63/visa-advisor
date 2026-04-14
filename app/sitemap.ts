@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { CORRIDORS } from "@/lib/corridors";
+import { PHOTO_CORRIDORS } from "@/lib/photo-corridors";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_APP_URL ?? "https://visa-advisor.vercel.app";
@@ -7,6 +8,13 @@ const BASE_URL =
 export default function sitemap(): MetadataRoute.Sitemap {
   const corridorPages = CORRIDORS.map((c) => ({
     url: `${BASE_URL}/visa/${c.slug}`,
+    lastModified: new Date(),
+    changeFrequency: "monthly" as const,
+    priority: 0.7,
+  }));
+
+  const photoPages = PHOTO_CORRIDORS.map((c) => ({
+    url: `${BASE_URL}/photo/${c.slug}`,
     lastModified: new Date(),
     changeFrequency: "monthly" as const,
     priority: 0.7,
@@ -25,6 +33,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly",
       priority: 0.8,
     },
+    {
+      url: `${BASE_URL}/photo`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.9,
+    },
     ...corridorPages,
+    ...photoPages,
   ];
 }
