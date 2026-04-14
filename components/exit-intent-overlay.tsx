@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { trackEvent } from "@/lib/analytics";
 
@@ -10,7 +9,7 @@ const AFFILIATE_LINKS = [
     id: "safetywing",
     name: "SafetyWing",
     tagline: "Travel medical insurance from $45/mo",
-    url: "https://safetywing.com/?referenceID=visa-advisor",
+    url: "https://safetywing.com/?referenceID=26510490&utm_source=26510490&utm_medium=Ambassador",
     cta: "Get covered",
   },
   {
@@ -31,29 +30,72 @@ const AFFILIATE_LINKS = [
 
 /**
  * Shows a non-intrusive overlay when the user appears to be leaving the
- * visa form without submitting. Only triggers once per session, and only
- * if the form is partially filled (2+ fields).
+ * visa form without submitting. Uses three detection methods:
+ *
+ * 1. mouseout — cursor left the document (relatedTarget null, clientY <= 0)
+ * 2. visibilitychange — user switched tabs or minimized
+ * 3. idle timeout — user filled fields but stopped interacting for 15s
+ *
+ * Only triggers once per session, and only if 2+ form fields are filled.
  */
 export function ExitIntentOverlay({ filledCount }: { filledCount: number }) {
   const [show, setShow] = useState(false);
   const [dismissed, setDismissed] = useState(false);
+  const triggered = useRef(false);
+  const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleMouseLeave = useCallback(
-    (e: MouseEvent) => {
-      // Only trigger when cursor moves toward top of viewport (browser chrome)
-      if (e.clientY > 50) return;
-      // Only show if form is partially filled and not already dismissed
-      if (filledCount < 2 || dismissed) return;
-      setShow(true);
-      trackEvent({ name: "exit_intent_shown", destination: "" });
-    },
-    [filledCount, dismissed],
-  );
+  const trigger = useCallback(() => {
+    if (triggered.current || dismissed) return;
+    triggered.current = true;
+    setShow(true);
+    trackEvent({ name: "exit_intent_shown", destination: "" });
+  }, [dismissed]);
 
+  // Method 1: Mouse leaves the document via top edge
   useEffect(() => {
-    document.addEventListener("mouseleave", handleMouseLeave);
-    return () => document.removeEventListener("mouseleave", handleMouseLeave);
-  }, [handleMouseLeave]);
+    function handleMouseOut(e: MouseEvent) {
+      if (filledCount < 2 || dismissed || triggered.current) return;
+      if (e.relatedTarget !== null && e.clientY > 0) return;
+      trigger();
+    }
+    document.addEventListener("mouseout", handleMouseOut);
+    return () => document.removeEventListener("mouseout", handleMouseOut);
+  }, [filledCount, dismissed, trigger]);
+
+  // Method 2: User switches tab or minimizes window
+  useEffect(() => {
+    function handleVisibilityChange() {
+      if (document.visibilityState !== "hidden") return;
+      if (filledCount < 2 || dismissed || triggered.current) return;
+      trigger();
+    }
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () =>
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [filledCount, dismissed, trigger]);
+
+  // Method 3: Idle timeout — user filled fields but stopped for 15s
+  useEffect(() => {
+    if (filledCount < 2 || dismissed || triggered.current) {
+      if (idleTimer.current) clearTimeout(idleTimer.current);
+      return;
+    }
+
+    function resetIdle() {
+      if (idleTimer.current) clearTimeout(idleTimer.current);
+      idleTimer.current = setTimeout(() => {
+        trigger();
+      }, 15_000);
+    }
+
+    resetIdle();
+    const events = ["mousemove", "keydown", "scroll", "touchstart"] as const;
+    for (const evt of events) window.addEventListener(evt, resetIdle);
+    return () => {
+      if (idleTimer.current) clearTimeout(idleTimer.current);
+      for (const evt of events) window.removeEventListener(evt, resetIdle);
+    };
+  }, [filledCount, dismissed, trigger]);
 
   function handleDismiss() {
     setShow(false);

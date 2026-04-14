@@ -39,8 +39,9 @@ export default async function ResultsPage({
         {input ? (
           <>
             <ResultsView input={input} />
-            <AdSlot slot="results-mid" format="horizontal" className="my-2" />
+            <AdSlot slot="6107070934" format="horizontal" className="my-2" />
             <PhotoTool country={input.destination} />
+            <AdSlot slot="9964210451" format="horizontal" className="my-2" />
             <DisclaimerBanner className="opacity-60 text-xs" />
           </>
         ) : (

@@ -182,7 +182,7 @@ export default async function CorridorPage({
           </ul>
         </div>
 
-        <AdSlot slot="corridor-mid" format="horizontal" className="my-2" />
+        <AdSlot slot="5803818608" format="horizontal" className="my-2" />
 
         {/* Related corridors for internal linking */}
         {relatedByPassport.length > 0 && (
@@ -222,6 +222,7 @@ export default async function CorridorPage({
             </div>
           </div>
         )}
+        <AdSlot slot="9668696980" format="horizontal" className="my-2" />
       </div>
     </main>
   );

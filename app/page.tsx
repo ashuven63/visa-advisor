@@ -1,6 +1,7 @@
 import { VisaForm } from "@/components/visa-form";
 import { DisclaimerBanner } from "@/components/disclaimer-banner";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { AdSlot } from "@/components/ad-slot";
 import {
   StructuredData,
   HOME_FAQ_SCHEMA,
@@ -31,6 +32,8 @@ export default function Home() {
         </header>
 
         <VisaForm />
+
+        <AdSlot slot="3294860321" format="horizontal" className="my-2" />
 
         <DisclaimerBanner className="opacity-60 text-xs" />
       </div>
