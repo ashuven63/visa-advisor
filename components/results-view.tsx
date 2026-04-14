@@ -12,6 +12,7 @@ import {
   type VisaAdviceResponse,
   type Verdict,
 } from "@/lib/visa-advice/schema";
+import type { WaitTimeRecord } from "@/lib/wait-times/types";
 
 type LoadState =
   | { status: "idle" }
@@ -187,6 +188,8 @@ function ResultsBody({ input, data }: { input: VisaAdviceInput; data: VisaAdvice
       <VerdictCard data={data} tone={tone} />
 
       {data.caveats.length > 0 ? <CaveatsList caveats={data.caveats} /> : null}
+
+      <WaitTimesCard country={input.destination} />
 
       {data.steps.length > 0 ? <StepsCard steps={data.steps} /> : null}
 
@@ -395,6 +398,72 @@ function CitationsCard({
             manually before acting on this answer.
           </p>
         ) : null}
+      </CardContent>
+    </Card>
+  );
+}
+
+function WaitTimesCard({ country }: { country: string }) {
+  const [records, setRecords] = useState<WaitTimeRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(`/api/wait-times?country=${country}`);
+        if (!res.ok) {
+          setLoading(false);
+          return;
+        }
+        const body = await res.json();
+        setRecords(body.records ?? []);
+      } catch {
+        // silently fail — wait times are supplementary
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [country]);
+
+  if (loading || records.length === 0) return null;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Estimated processing times</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="flex flex-col gap-3">
+          {records.map((r, i) => (
+            <div
+              key={i}
+              className="flex items-center justify-between gap-4 rounded-xl border border-border px-4 py-3"
+            >
+              <div className="flex flex-col gap-0.5">
+                <p className="text-sm font-medium">{r.category}</p>
+                {r.post ? (
+                  <p className="text-xs text-muted-foreground">{r.post}</p>
+                ) : null}
+              </div>
+              <div className="flex flex-col items-end gap-0.5">
+                <p className="text-sm font-semibold">
+                  {r.waitLabel ?? (r.waitDays != null ? `${r.waitDays} days` : "N/A")}
+                </p>
+                <a
+                  href={r.sourceUrl}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="text-[10px] text-brand-700 underline-offset-2 hover:underline dark:text-brand-300"
+                >
+                  source
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-[10px] text-muted-foreground/60">
+          Processing times are estimates based on official government data and may change.
+        </p>
       </CardContent>
     </Card>
   );
