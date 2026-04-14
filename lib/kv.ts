@@ -1,9 +1,11 @@
 /**
- * Unified key-value cache. Uses Vercel KV (Redis) when `KV_REST_API_URL` is
+ * Unified key-value cache. Uses Upstash Redis when `KV_REST_API_URL` is
  * set (production), otherwise falls back to an in-memory Map (local dev).
  *
  * All values are JSON-serialized. TTL is in seconds.
  */
+
+import { Redis } from "@upstash/redis";
 
 let kvClient: {
   get: <T>(key: string) => Promise<T | null>;
@@ -11,18 +13,21 @@ let kvClient: {
   del: (key: string) => Promise<void>;
 } | null = null;
 
-async function getKvClient() {
+function getKvClient() {
   if (kvClient) return kvClient;
 
-  if (process.env.KV_REST_API_URL) {
-    const { kv } = await import("@vercel/kv");
+  if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
+    const redis = new Redis({
+      url: process.env.KV_REST_API_URL,
+      token: process.env.KV_REST_API_TOKEN,
+    });
     kvClient = {
-      get: (key) => kv.get(key),
+      get: <T>(key: string) => redis.get<T>(key),
       set: (key, value, opts) =>
-        kv.set(key, value, opts?.ex ? { ex: opts.ex } : undefined).then(
-          () => {},
-        ),
-      del: (key) => kv.del(key).then(() => {}),
+        opts?.ex
+          ? redis.set(key, value, { ex: opts.ex }).then(() => {})
+          : redis.set(key, value).then(() => {}),
+      del: (key) => redis.del(key).then(() => {}),
     };
   } else {
     // In-memory fallback for local dev
@@ -53,7 +58,7 @@ async function getKvClient() {
 }
 
 export async function kvGet<T>(key: string): Promise<T | null> {
-  const client = await getKvClient();
+  const client = getKvClient();
   return client.get<T>(key);
 }
 
@@ -62,11 +67,11 @@ export async function kvSet(
   value: unknown,
   ttlSeconds?: number,
 ): Promise<void> {
-  const client = await getKvClient();
+  const client = getKvClient();
   await client.set(key, value, ttlSeconds ? { ex: ttlSeconds } : undefined);
 }
 
 export async function kvDel(key: string): Promise<void> {
-  const client = await getKvClient();
+  const client = getKvClient();
   await client.del(key);
 }
