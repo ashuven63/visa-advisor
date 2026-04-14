@@ -5,6 +5,7 @@ import { StructuredData } from "@/components/structured-data";
 import { PhotoTool } from "@/components/photo-tool";
 import { AdSlot } from "@/components/ad-slot";
 import { PHOTO_CORRIDORS } from "@/lib/photo-corridors";
+import { PhotoSamples } from "@/components/photo-samples";
 
 export const metadata: Metadata = {
   title: "Free Passport & Visa Photo Checker — AI-Powered Compliance Tool",
@@ -165,6 +166,8 @@ export default function PhotoPage() {
             </li>
           </ul>
         </div>
+
+        <PhotoSamples />
 
         <AdSlot slot="5803818608" format="horizontal" className="my-2" />
 

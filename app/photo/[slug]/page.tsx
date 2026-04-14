@@ -10,6 +10,7 @@ import {
   PHOTO_CORRIDORS,
   getPhotoCorridorBySlug,
 } from "@/lib/photo-corridors";
+import { PhotoSamples } from "@/components/photo-samples";
 
 export const dynamicParams = false;
 
@@ -210,6 +211,8 @@ export default async function PhotoCorridorPage({
 
         {/* Photo tool */}
         <PhotoTool country={corridor.countryCode} />
+
+        <PhotoSamples />
 
         <AdSlot slot="5803818608" format="horizontal" className="my-2" />
 
