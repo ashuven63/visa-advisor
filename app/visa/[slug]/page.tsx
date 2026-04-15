@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { StructuredData } from "@/components/structured-data";
 import { CORRIDORS, getCorridorBySlug } from "@/lib/corridors";
+import { getBestPhotoCorridorForDestination } from "@/lib/photo-corridors";
 import { AdSlot } from "@/components/ad-slot";
 
 export const dynamicParams = false;
@@ -84,6 +85,8 @@ export default async function CorridorPage({
       c.destinationCode === corridor.destinationCode &&
       c.slug !== corridor.slug,
   ).slice(0, 5);
+
+  const photoCorridor = getBestPhotoCorridorForDestination(corridor.destinationCode);
 
   return (
     <main className="flex flex-1 flex-col items-center px-4 py-10 sm:py-14">
@@ -181,6 +184,26 @@ export default async function CorridorPage({
             </li>
           </ul>
         </div>
+
+        {photoCorridor && (
+          <div className="rounded-2xl border border-brand-200 bg-brand-50 p-6 dark:border-brand-800 dark:bg-brand-950">
+            <h2 className="font-display text-xl font-medium">
+              {corridor.destination} photo requirements
+            </h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {corridor.destination} requires a {photoCorridor.dimensions} photo
+              with {photoCorridor.background.toLowerCase()} background.
+              Check your photo for free and auto-fix any issues with AI.
+            </p>
+            <div className="mt-4 flex gap-3">
+              <Button asChild>
+                <Link href={`/photo/${photoCorridor.slug}`}>
+                  Check photo requirements
+                </Link>
+              </Button>
+            </div>
+          </div>
+        )}
 
         <AdSlot slot="5803818608" format="horizontal" className="my-2" />
 

@@ -10,6 +10,7 @@ import {
   PHOTO_CORRIDORS,
   getPhotoCorridorBySlug,
 } from "@/lib/photo-corridors";
+import { CORRIDORS } from "@/lib/corridors";
 import { PhotoSamples } from "@/components/photo-samples";
 
 export const dynamicParams = false;
@@ -138,6 +139,10 @@ export default async function PhotoCorridorPage({
   // Related photo corridors
   const related = PHOTO_CORRIDORS.filter(
     (c) => c.slug !== corridor.slug,
+  ).slice(0, 8);
+
+  const relevantVisaCorridors = CORRIDORS.filter(
+    (c) => c.destinationCode === corridor.countryCode,
   ).slice(0, 8);
 
   return (
@@ -281,6 +286,25 @@ export default async function PhotoCorridorPage({
             )}
           </ul>
         </div>
+
+        {relevantVisaCorridors.length > 0 && (
+          <div className="flex flex-col gap-3">
+            <h3 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
+              Visa requirements for {corridor.name.replace(/ (Passport|Visa).*/, "")}
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {relevantVisaCorridors.map((c) => (
+                <Link
+                  key={c.slug}
+                  href={`/visa/${c.slug}`}
+                  className="rounded-full border border-border px-3 py-1 text-sm text-muted-foreground transition-colors hover:border-brand-400 hover:text-foreground"
+                >
+                  {c.passport} &rarr; {c.destination}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* CTA to check visa requirements */}
         <div className="rounded-2xl border border-brand-200 bg-brand-50 p-6 dark:border-brand-800 dark:bg-brand-950">

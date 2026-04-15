@@ -431,3 +431,14 @@ export const PHOTO_CORRIDORS: PhotoCorridor[] = [
 export function getPhotoCorridorBySlug(slug: string): PhotoCorridor | undefined {
   return PHOTO_CORRIDORS.find((c) => c.slug === slug);
 }
+
+/** Find all photo corridors matching a country code. */
+export function getPhotoCorridorsByCountry(countryCode: string): PhotoCorridor[] {
+  return PHOTO_CORRIDORS.filter((c) => c.countryCode === countryCode);
+}
+
+/** Find the best photo corridor for a visa destination (prefer visa-specific over passport). */
+export function getBestPhotoCorridorForDestination(destinationCode: string): PhotoCorridor | undefined {
+  const matches = PHOTO_CORRIDORS.filter((c) => c.countryCode === destinationCode);
+  return matches.find((c) => c.slug.includes("visa")) ?? matches[0];
+}
