@@ -76,6 +76,31 @@ export default async function CorridorPage({
     ],
   };
 
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://www.visahint.com",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Visa Requirements",
+        item: "https://www.visahint.com",
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: `${corridor.passport} to ${corridor.destination}`,
+        item: `https://www.visahint.com/visa/${corridor.slug}`,
+      },
+    ],
+  };
+
   // Find related corridors (same passport or same destination)
   const relatedByPassport = CORRIDORS.filter(
     (c) => c.passportCode === corridor.passportCode && c.slug !== corridor.slug,
@@ -91,6 +116,7 @@ export default async function CorridorPage({
   return (
     <main className="flex flex-1 flex-col items-center px-4 py-10 sm:py-14">
       <StructuredData data={faqSchema} />
+      <StructuredData data={breadcrumbSchema} />
       <div className="flex w-full max-w-3xl flex-col gap-8">
         <div className="flex items-center justify-between">
           <Link
