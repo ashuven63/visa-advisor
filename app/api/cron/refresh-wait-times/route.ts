@@ -15,6 +15,25 @@ export const maxDuration = 60; // allow up to 60s for all sources
  *
  * On Vercel, protect with CRON_SECRET; in dev, allow unauthenticated.
  */
+const SITEMAP_URL = "https://www.visahint.com/sitemap.xml";
+
+async function pingSitemaps(): Promise<{ google: boolean; bing: boolean }> {
+  const results = { google: false, bing: false };
+  try {
+    const gRes = await fetch(
+      `https://www.google.com/ping?sitemap=${encodeURIComponent(SITEMAP_URL)}`,
+    );
+    results.google = gRes.ok;
+  } catch { /* fire-and-forget */ }
+  try {
+    const bRes = await fetch(
+      `https://www.bing.com/ping?sitemap=${encodeURIComponent(SITEMAP_URL)}`,
+    );
+    results.bing = bRes.ok;
+  } catch { /* fire-and-forget */ }
+  return results;
+}
+
 export async function GET(req: Request) {
   const cronSecret = process.env.CRON_SECRET;
   if (cronSecret) {
@@ -46,5 +65,7 @@ export async function GET(req: Request) {
     }
   }
 
-  return NextResponse.json({ refreshed: results });
+  const sitemapPing = await pingSitemaps();
+
+  return NextResponse.json({ refreshed: results, sitemapPing });
 }
