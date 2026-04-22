@@ -7,8 +7,14 @@ import { StructuredData } from "@/components/structured-data";
 import { CORRIDORS, getCorridorBySlug } from "@/lib/corridors";
 import { getBestPhotoCorridorForDestination } from "@/lib/photo-corridors";
 import { AdSlot } from "@/components/ad-slot";
+import {
+  getCorridorWaitTime,
+  formatWaitLabel,
+} from "@/lib/wait-times/query";
 
 export const dynamicParams = false;
+// Regenerate at most hourly so wait-time data refreshes after the nightly cron.
+export const revalidate = 3600;
 
 export function generateStaticParams() {
   return CORRIDORS.map((c) => ({ slug: c.slug }));
@@ -45,35 +51,39 @@ export default async function CorridorPage({
 
   const checkUrl = `/results?destination=${corridor.destinationCode}&passport=${corridor.passportCode}&residence=${corridor.passportCode}&purpose=tourist&days=14&heldVisas=`;
 
+  const photoCorridor = getBestPhotoCorridorForDestination(corridor.destinationCode);
+  const waitTime = await getCorridorWaitTime(corridor.destinationCode, "tourist");
+
+  const faqEntries: { q: string; a: string }[] = [
+    {
+      q: `Do ${corridor.passport} citizens need a visa for ${corridor.destination}?`,
+      a: `Use Visa Advisor to check the latest visa requirements for ${corridor.passport} passport holders traveling to ${corridor.destination}. Results include official citations, required documents, and processing times.`,
+    },
+    {
+      q: `What documents do I need to travel from ${corridor.passport} to ${corridor.destination}?`,
+      a: `Document requirements vary by trip purpose and duration. Visa Advisor provides a personalized checklist based on your specific travel details, with links to official sources.`,
+    },
+    {
+      q: `What are the ${corridor.destination} visa photo requirements for ${corridor.passport} applicants?`,
+      a: `Visa Advisor includes a free photo compliance checker that validates your photo against ${corridor.destination}'s official requirements and can auto-fix issues like background color and dimensions.`,
+    },
+  ];
+
+  if (waitTime) {
+    faqEntries.unshift({
+      q: `How long does a ${corridor.destination} visa take for ${corridor.passport} applicants?`,
+      a: `Current median processing time for ${waitTime.category.toLowerCase()} applicants is about ${formatWaitLabel(waitTime)} (${waitTime.medianDays} days), based on official data${waitTime.postCount > 1 ? ` across ${waitTime.postCount} consulates` : ""} last updated ${new Date(waitTime.fetchedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}.`,
+    });
+  }
+
   const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: [
-      {
-        "@type": "Question",
-        name: `Do ${corridor.passport} citizens need a visa for ${corridor.destination}?`,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: `Use Visa Advisor to check the latest visa requirements for ${corridor.passport} passport holders traveling to ${corridor.destination}. Results include official citations, required documents, and processing times.`,
-        },
-      },
-      {
-        "@type": "Question",
-        name: `What documents do I need to travel from ${corridor.passport} to ${corridor.destination}?`,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: `Document requirements vary by trip purpose and duration. Visa Advisor provides a personalized checklist based on your specific travel details, with links to official sources.`,
-        },
-      },
-      {
-        "@type": "Question",
-        name: `What are the ${corridor.destination} visa photo requirements for ${corridor.passport} applicants?`,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: `Visa Advisor includes a free photo compliance checker that validates your photo against ${corridor.destination}'s official requirements and can auto-fix issues like background color and dimensions.`,
-        },
-      },
-    ],
+    mainEntity: faqEntries.map((e) => ({
+      "@type": "Question",
+      name: e.q,
+      acceptedAnswer: { "@type": "Answer", text: e.a },
+    })),
   };
 
   const breadcrumbSchema = {
@@ -110,8 +120,6 @@ export default async function CorridorPage({
       c.destinationCode === corridor.destinationCode &&
       c.slug !== corridor.slug,
   ).slice(0, 5);
-
-  const photoCorridor = getBestPhotoCorridorForDestination(corridor.destinationCode);
 
   return (
     <main className="flex flex-1 flex-col items-center px-4 py-10 sm:py-14">
@@ -210,6 +218,54 @@ export default async function CorridorPage({
             </li>
           </ul>
         </div>
+
+        {waitTime && (
+          <div className="rounded-2xl border border-border bg-card p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="font-display text-xl font-medium">
+                  Current {corridor.destination} visa wait time
+                </h2>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Typical processing for {waitTime.category.toLowerCase()}{" "}
+                  applicants
+                  {waitTime.postCount > 1
+                    ? ` across ${waitTime.postCount} consulates`
+                    : ""}
+                  .
+                </p>
+              </div>
+              <div className="text-right">
+                <div className="font-display text-3xl font-medium text-brand-600 dark:text-brand-400">
+                  {formatWaitLabel(waitTime)}
+                </div>
+                <div className="mt-1 text-xs text-muted-foreground">
+                  median {waitTime.medianDays} days
+                </div>
+              </div>
+            </div>
+            <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+              <span>
+                Updated{" "}
+                <time dateTime={waitTime.fetchedAt}>
+                  {new Date(waitTime.fetchedAt).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </time>
+              </span>
+              <a
+                href={waitTime.sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-brand-600 hover:underline dark:text-brand-400"
+              >
+                Official source &rarr;
+              </a>
+            </div>
+          </div>
+        )}
 
         {photoCorridor && (
           <div className="rounded-2xl border border-brand-200 bg-brand-50 p-6 dark:border-brand-800 dark:bg-brand-950">
