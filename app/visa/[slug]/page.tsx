@@ -11,6 +11,11 @@ import {
   getCorridorWaitTime,
   formatWaitLabel,
 } from "@/lib/wait-times/query";
+import {
+  VISA_CORRIDORS_REVIEWED_AT,
+  EDITORIAL_AUTHOR,
+  formatReviewDate,
+} from "@/lib/editorial";
 
 export const dynamicParams = false;
 // Regenerate at most hourly so wait-time data refreshes after the nightly cron.
@@ -86,6 +91,28 @@ export default async function CorridorPage({
     })),
   };
 
+  const pageUrl = `https://www.visahint.com/visa/${corridor.slug}`;
+  const pageSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: `${corridor.passport} passport to ${corridor.destination} — Visa requirements`,
+    url: pageUrl,
+    dateModified: waitTime
+      ? waitTime.fetchedAt
+      : `${VISA_CORRIDORS_REVIEWED_AT}T00:00:00Z`,
+    lastReviewed: `${VISA_CORRIDORS_REVIEWED_AT}T00:00:00Z`,
+    author: {
+      "@type": "Organization",
+      name: EDITORIAL_AUTHOR.name,
+      url: EDITORIAL_AUTHOR.url,
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "VisaHint",
+      url: "https://www.visahint.com",
+    },
+  };
+
   const breadcrumbSchema = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -125,6 +152,7 @@ export default async function CorridorPage({
     <main className="flex flex-1 flex-col items-center px-4 py-10 sm:py-14">
       <StructuredData data={faqSchema} />
       <StructuredData data={breadcrumbSchema} />
+      <StructuredData data={pageSchema} />
       <div className="flex w-full max-w-3xl flex-col gap-8">
         <div className="flex items-center justify-between">
           <Link
@@ -153,6 +181,20 @@ export default async function CorridorPage({
             {corridor.destination}? Check the latest requirements with official
             citations, get a personalized document checklist, and verify your
             visa photo — all free.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Last reviewed{" "}
+            <time dateTime={VISA_CORRIDORS_REVIEWED_AT}>
+              {formatReviewDate(VISA_CORRIDORS_REVIEWED_AT)}
+            </time>{" "}
+            by{" "}
+            <a
+              href={EDITORIAL_AUTHOR.url}
+              className="underline hover:text-foreground"
+            >
+              {EDITORIAL_AUTHOR.name}
+            </a>
+            .
           </p>
         </header>
 

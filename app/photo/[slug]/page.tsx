@@ -12,6 +12,11 @@ import {
 } from "@/lib/photo-corridors";
 import { CORRIDORS } from "@/lib/corridors";
 import { PhotoSamples } from "@/components/photo-samples";
+import {
+  PHOTO_CORRIDORS_REVIEWED_AT,
+  EDITORIAL_AUTHOR,
+  formatReviewDate,
+} from "@/lib/editorial";
 
 export const dynamicParams = false;
 
@@ -161,6 +166,25 @@ export default async function PhotoCorridorPage({
     ],
   };
 
+  const pageSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: corridor.title,
+    url: `https://www.visahint.com/photo/${corridor.slug}`,
+    dateModified: `${PHOTO_CORRIDORS_REVIEWED_AT}T00:00:00Z`,
+    lastReviewed: `${PHOTO_CORRIDORS_REVIEWED_AT}T00:00:00Z`,
+    author: {
+      "@type": "Organization",
+      name: EDITORIAL_AUTHOR.name,
+      url: EDITORIAL_AUTHOR.url,
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "VisaHint",
+      url: "https://www.visahint.com",
+    },
+  };
+
   // Related photo corridors
   const related = PHOTO_CORRIDORS.filter(
     (c) => c.slug !== corridor.slug,
@@ -175,6 +199,7 @@ export default async function PhotoCorridorPage({
       <StructuredData data={faqSchema} />
       <StructuredData data={howToSchema} />
       <StructuredData data={breadcrumbSchema} />
+      <StructuredData data={pageSchema} />
       <div className="flex w-full max-w-3xl flex-col gap-8">
         <div className="flex items-center justify-between">
           <Link
@@ -202,6 +227,20 @@ export default async function PhotoCorridorPage({
             Check your {corridor.name.toLowerCase()} photo against official
             requirements. Upload below for a free instant compliance check — and
             use AI to auto-fix any issues.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Last reviewed{" "}
+            <time dateTime={PHOTO_CORRIDORS_REVIEWED_AT}>
+              {formatReviewDate(PHOTO_CORRIDORS_REVIEWED_AT)}
+            </time>{" "}
+            by{" "}
+            <a
+              href={EDITORIAL_AUTHOR.url}
+              className="underline hover:text-foreground"
+            >
+              {EDITORIAL_AUTHOR.name}
+            </a>
+            .
           </p>
         </header>
 
