@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { StructuredData } from "@/components/structured-data";
+import { DisclaimerBanner } from "@/components/disclaimer-banner";
 import { CORRIDORS, getCorridorBySlug } from "@/lib/corridors";
 import { getBestPhotoCorridorForDestination } from "@/lib/photo-corridors";
 import { AdSlot } from "@/components/ad-slot";
@@ -370,6 +371,8 @@ export default async function CorridorPage({
           </div>
         )}
         <AdSlot slot="9668696980" format="horizontal" className="my-2" />
+
+        <DisclaimerBanner className="opacity-80 text-xs" />
       </div>
     </main>
   );

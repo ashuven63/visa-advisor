@@ -21,6 +21,18 @@ export const EDITORIAL_AUTHOR = {
   url: "https://www.visahint.com",
 } as const;
 
+/** Publisher / brand identity used in policy pages, footer, and JSON-LD. */
+export const PUBLISHER = {
+  name: "VisaHint",
+  url: "https://www.visahint.com",
+  /**
+   * Public-facing contact email. Reviewable by AdSense / users / readers.
+   * Swap to a domain-hosted address (e.g. hello@visahint.com) once the
+   * MX records are configured.
+   */
+  contactEmail: "venkaakesh@gmail.com",
+} as const;
+
 /** Human-readable "April 21, 2026" style date. */
 export function formatReviewDate(iso: string): string {
   return new Date(iso + "T00:00:00Z").toLocaleDateString("en-US", {

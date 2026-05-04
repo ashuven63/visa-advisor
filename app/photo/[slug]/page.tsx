@@ -12,6 +12,7 @@ import {
 } from "@/lib/photo-corridors";
 import { CORRIDORS } from "@/lib/corridors";
 import { PhotoSamples } from "@/components/photo-samples";
+import { DisclaimerBanner } from "@/components/disclaimer-banner";
 import {
   PHOTO_CORRIDORS_REVIEWED_AT,
   EDITORIAL_AUTHOR,
@@ -408,6 +409,8 @@ export default async function PhotoCorridorPage({
             </div>
           </div>
         )}
+
+        <DisclaimerBanner className="opacity-80 text-xs" />
       </div>
     </main>
   );

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Fraunces, Inter } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import { ThemeProvider } from "@/components/theme-provider";
+import { SiteFooter } from "@/components/site-footer";
 import "./globals.css";
 
 const adsenseClientId = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID;
@@ -64,7 +65,10 @@ export default function RootLayout({
         )}
       </head>
       <body className="min-h-full flex flex-col bg-background text-foreground">
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          {children}
+          <SiteFooter />
+        </ThemeProvider>
         <Analytics />
       </body>
     </html>
