@@ -44,6 +44,25 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  verification: {
+    // Set NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION to the content="..." value
+    // from Google Search Console's "HTML tag" verification method.
+    // Bing/Yandex use the same pattern with their own console tokens.
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+    other: {
+      ...(process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION
+        ? {
+            "msvalidate.01": process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION,
+          }
+        : {}),
+      ...(process.env.NEXT_PUBLIC_YANDEX_SITE_VERIFICATION
+        ? {
+            "yandex-verification":
+              process.env.NEXT_PUBLIC_YANDEX_SITE_VERIFICATION,
+          }
+        : {}),
+    },
+  },
 };
 
 export default function RootLayout({

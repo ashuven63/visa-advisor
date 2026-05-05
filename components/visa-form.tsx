@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { COUNTRIES } from "@/lib/countries";
 import { ExitIntentOverlay } from "@/components/exit-intent-overlay";
+import { trackEvent } from "@/lib/analytics";
 import type { VisaAdviceInput } from "@/lib/visa-advice/schema";
 
 type FormState = {
@@ -72,6 +73,12 @@ export function VisaForm({ initial }: { initial?: Partial<FormState> }) {
       purpose: input.purpose,
       days: String(input.days),
       heldVisas: input.heldVisas,
+    });
+
+    void trackEvent({
+      name: "visa_check_submitted",
+      destination: input.destination,
+      passport: input.passports[0],
     });
 
     startTransition(() => {

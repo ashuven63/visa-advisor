@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { trackEvent } from "@/lib/analytics";
 import type { PhotoReport, PhotoCheck } from "@/lib/photo/types";
 
 type Phase =
@@ -20,6 +21,7 @@ export function PhotoTool({ country }: { country: string }) {
   async function onFileSelected(file: File) {
     const previewUrl = URL.createObjectURL(file);
     setPhase({ step: "checking", previewUrl });
+    void trackEvent({ name: "photo_uploaded", destination: country });
     const form = new FormData();
     form.set("photo", file);
     form.set("country", country);
@@ -33,6 +35,11 @@ export function PhotoTool({ country }: { country: string }) {
         return;
       }
       const report = (await res.json()) as PhotoReport;
+      const allPassed = report.checks.every((c) => c.status !== "fail");
+      void trackEvent({
+        name: allPassed ? "photo_check_passed" : "photo_check_failed",
+        destination: country,
+      });
       setPhase({ step: "report", report, file, previewUrl });
     } catch {
       alert("Network error — could not check photo.");
@@ -42,6 +49,7 @@ export function PhotoTool({ country }: { country: string }) {
 
   async function onFix(file: File, failures: PhotoCheck[], previewUrl: string) {
     setPhase({ step: "fixing", previewUrl });
+    void trackEvent({ name: "photo_fix_requested", destination: country });
     const form = new FormData();
     form.set("photo", file);
     form.set("country", country);
@@ -57,6 +65,7 @@ export function PhotoTool({ country }: { country: string }) {
       }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
+      void trackEvent({ name: "photo_fix_completed", destination: country });
       setPhase({ step: "fixed", fixedUrl: url, previewUrl });
     } catch {
       alert("Network error — could not fix photo.");

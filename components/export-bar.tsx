@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { trackEvent } from "@/lib/analytics";
 import type { VisaAdviceInput, VisaAdviceResponse } from "@/lib/visa-advice/schema";
 
 export function ExportBar({
@@ -43,6 +44,7 @@ function PdfButton({
       a.download = "visa-advisor-results.pdf";
       a.click();
       URL.revokeObjectURL(url);
+      void trackEvent({ name: "export_pdf", destination: input.destination });
     } catch (err) {
       console.error("PDF generation failed:", err);
       alert("PDF generation failed. Please try again.");
@@ -82,6 +84,10 @@ function EmailButton({
       if (res.ok) {
         setSent(true);
         setOpen(false);
+        void trackEvent({
+          name: "export_email",
+          destination: input.destination,
+        });
       } else {
         const body = await res.json().catch(() => ({}));
         alert(body?.error ?? "Failed to send email.");
@@ -155,6 +161,10 @@ function ShareButton({
         const { url } = await res.json();
         setUrl(url);
         await navigator.clipboard.writeText(url).catch(() => {});
+        void trackEvent({
+          name: "export_share_link",
+          destination: input.destination,
+        });
       } else {
         alert("Failed to create share link.");
       }

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { countryName } from "@/lib/countries";
 import { ExportBar } from "@/components/export-bar";
+import { trackEvent } from "@/lib/analytics";
 import {
   type VisaAdviceInput,
   type VisaAdviceResponse,
@@ -55,6 +56,22 @@ export function ResultsView({
   const [state, setState] = useState<LoadState>(
     initialData ? { status: "ready", data: initialData } : { status: "idle" },
   );
+
+  // Derived primitive — stable across renders for the same result, which
+  // keeps the analytics effect from re-firing on unrelated state changes.
+  const verdictForAnalytics =
+    state.status === "ready" ? state.data.verdict : null;
+
+  useEffect(() => {
+    // Fire visa_check_completed once per ready state. Covers both the
+    // shared-link path (initialData) and the live-fetch path.
+    if (verdictForAnalytics === null) return;
+    void trackEvent({
+      name: "visa_check_completed",
+      destination: input.destination,
+      verdict: verdictForAnalytics,
+    });
+  }, [verdictForAnalytics, input.destination]);
 
   useEffect(() => {
     // Skip fetch if we already have data (e.g. from a shared link).
