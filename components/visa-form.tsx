@@ -140,7 +140,7 @@ export function VisaForm({ initial }: { initial?: Partial<FormState> }) {
                   className={cn(
                     "h-11 flex-1 rounded-xl border font-medium transition-colors",
                     state.purpose === p
-                      ? "border-brand-500 bg-brand-50 text-brand-900 dark:border-brand-400 dark:bg-brand-950 dark:text-brand-100"
+                      ? "border-brand-500 bg-brand-50 text-brand-900"
                       : "border-border bg-background text-muted-foreground hover:bg-muted",
                   )}
                   aria-pressed={state.purpose === p}

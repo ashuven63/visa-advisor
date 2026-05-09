@@ -373,7 +373,7 @@ export default async function PhotoCorridorPage({
         )}
 
         {/* CTA to check visa requirements */}
-        <div className="rounded-2xl border border-brand-200 bg-brand-50 p-6 dark:border-brand-800 dark:bg-brand-950">
+        <div className="rounded-2xl border border-brand-200 bg-brand-50 p-6">
           <h2 className="font-display text-xl font-medium">
             Need a visa too?
           </h2>

@@ -158,8 +158,8 @@ function TripSummary({ input }: { input: VisaAdviceInput }) {
         </span>
       ))}
       {input.heldVisas.trim() ? (
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-medium text-brand-900 dark:border-brand-800 dark:bg-brand-950 dark:text-brand-100">
-          <span className="text-brand-700 dark:text-brand-300">Holds</span>
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-medium text-brand-900">
+          <span className="text-brand-700">Holds</span>
           <span>{input.heldVisas}</span>
         </span>
       ) : null}

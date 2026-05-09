@@ -186,7 +186,7 @@ export default function PhotoPage() {
                 <Link
                   key={c.slug}
                   href={`/photo/${c.slug}`}
-                  className="rounded-xl border border-border px-4 py-3 text-sm transition-colors hover:border-brand-400 hover:bg-brand-50 dark:hover:border-brand-600 dark:hover:bg-brand-950"
+                  className="rounded-xl border border-border px-4 py-3 text-sm transition-colors hover:border-brand-400 hover:bg-brand-50"
                 >
                   <span className="font-medium">{c.name}</span>
                   <span className="block text-xs text-muted-foreground">
@@ -199,7 +199,7 @@ export default function PhotoPage() {
         </div>
 
         {/* CTA */}
-        <div className="rounded-2xl border border-brand-200 bg-brand-50 p-6 dark:border-brand-800 dark:bg-brand-950">
+        <div className="rounded-2xl border border-brand-200 bg-brand-50 p-6">
           <h2 className="font-display text-xl font-medium">
             Need a visa too?
           </h2>

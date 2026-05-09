@@ -135,7 +135,7 @@ export function ExitIntentOverlay({ filledCount }: { filledCount: number }) {
               onClick={() => handleAffiliateClick(link.id)}
               className={cn(
                 "flex items-center justify-between rounded-xl border border-border p-4 transition-colors",
-                "hover:border-brand-400 hover:bg-brand-50 dark:hover:border-brand-600 dark:hover:bg-brand-950",
+                "hover:border-brand-400 hover:bg-brand-50",
               )}
             >
               <div className="flex flex-col gap-0.5">
