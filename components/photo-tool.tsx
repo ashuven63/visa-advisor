@@ -27,6 +27,7 @@ export function PhotoTool({ country }: { country: string }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [phase, setPhase] = useState<Phase>({ step: "idle" });
   const [printBusy, setPrintBusy] = useState(false);
+  const [certBusy, setCertBusy] = useState(false);
 
   async function onFileSelected(file: File) {
     const previewUrl = URL.createObjectURL(file);
@@ -89,6 +90,32 @@ export function PhotoTool({ country }: { country: string }) {
   }
 
   /**
+   * Read the fixed-photo Blob URL into a base64 data URL — react-pdf
+   * needs an embeddable string, not a blob: URL it would have to fetch.
+   * Shared between the print-sheet and certificate generators.
+   */
+  async function fixedPhotoAsDataUrl(blobUrl: string): Promise<string> {
+    const res = await fetch(blobUrl);
+    const blob = await res.blob();
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  /**
+   * Pick a human-readable document name for the certificate from the
+   * route's country code. The country only tells us the destination —
+   * for now we infer "Visa or Passport" since both documents share a
+   * spec on most corridors.
+   */
+  function inferDocumentName(): string {
+    return "Passport / Visa";
+  }
+
+  /**
    * Generate and download a 4×6" printable sheet of the fixed photo.
    * Lazy-imports both @react-pdf/renderer and the print-sheet component
    * to keep the main bundle small — this code path runs only after the
@@ -98,17 +125,7 @@ export function PhotoTool({ country }: { country: string }) {
     if (phase.step !== "fixed") return;
     setPrintBusy(true);
     try {
-      // Read the fixed-photo Blob URL into a base64 data URL — react-pdf
-      // needs an embeddable string, not a blob: URL it would have to fetch.
-      const res = await fetch(phase.fixedUrl);
-      const blob = await res.blob();
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result));
-        reader.onerror = () => reject(reader.error);
-        reader.readAsDataURL(blob);
-      });
-
+      const dataUrl = await fixedPhotoAsDataUrl(phase.fixedUrl);
       const { pdf } = await import("@react-pdf/renderer");
       const { PrintSheetPdf } = await import("@/lib/photo/print-sheet");
 
@@ -136,6 +153,45 @@ export function PhotoTool({ country }: { country: string }) {
       alert("Print sheet generation failed. Please try again.");
     } finally {
       setPrintBusy(false);
+    }
+  }
+
+  /**
+   * Generate and download a one-page Letter-size compliance certificate
+   * showing the spec the photo was checked against, the official source
+   * URL, and the issue date. Trust artifact + word-of-mouth driver.
+   */
+  async function onDownloadCertificate() {
+    if (phase.step !== "fixed") return;
+    setCertBusy(true);
+    try {
+      const dataUrl = await fixedPhotoAsDataUrl(phase.fixedUrl);
+      const { pdf } = await import("@react-pdf/renderer");
+      const { ComplianceCertificatePdf } = await import(
+        "@/lib/photo/compliance-cert"
+      );
+
+      const pdfBlob = await pdf(
+        <ComplianceCertificatePdf
+          photoSrc={dataUrl}
+          spec={phase.spec}
+          documentName={inferDocumentName()}
+        />,
+      ).toBlob();
+
+      const downloadUrl = URL.createObjectURL(pdfBlob);
+      const a = document.createElement("a");
+      a.href = downloadUrl;
+      a.download = `visa-photo-compliance-cert-${phase.spec.country.toLowerCase()}.pdf`;
+      a.click();
+      URL.revokeObjectURL(downloadUrl);
+
+      void trackEvent({ name: "export_pdf", destination: country });
+    } catch (err) {
+      console.error("Certificate generation failed:", err);
+      alert("Certificate generation failed. Please try again.");
+    } finally {
+      setCertBusy(false);
     }
   }
 
@@ -222,6 +278,15 @@ export function PhotoTool({ country }: { country: string }) {
                 disabled={printBusy}
               >
                 {printBusy ? "Generating sheet…" : "Download printable 4×6 sheet"}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={onDownloadCertificate}
+                disabled={certBusy}
+              >
+                {certBusy
+                  ? "Generating certificate…"
+                  : "Download compliance certificate"}
               </Button>
               <Button
                 variant="outline"
