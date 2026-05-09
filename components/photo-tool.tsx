@@ -5,18 +5,28 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { trackEvent } from "@/lib/analytics";
-import type { PhotoReport, PhotoCheck } from "@/lib/photo/types";
+import type {
+  PhotoReport,
+  PhotoCheck,
+  CountryPhotoSpec,
+} from "@/lib/photo/types";
 
 type Phase =
   | { step: "idle" }
   | { step: "checking"; previewUrl: string }
   | { step: "report"; report: PhotoReport; file: File; previewUrl: string }
-  | { step: "fixing"; previewUrl: string }
-  | { step: "fixed"; fixedUrl: string; previewUrl: string };
+  | { step: "fixing"; previewUrl: string; spec: CountryPhotoSpec }
+  | {
+      step: "fixed";
+      fixedUrl: string;
+      previewUrl: string;
+      spec: CountryPhotoSpec;
+    };
 
 export function PhotoTool({ country }: { country: string }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [phase, setPhase] = useState<Phase>({ step: "idle" });
+  const [printBusy, setPrintBusy] = useState(false);
 
   async function onFileSelected(file: File) {
     const previewUrl = URL.createObjectURL(file);
@@ -47,8 +57,13 @@ export function PhotoTool({ country }: { country: string }) {
     }
   }
 
-  async function onFix(file: File, failures: PhotoCheck[], previewUrl: string) {
-    setPhase({ step: "fixing", previewUrl });
+  async function onFix(
+    file: File,
+    failures: PhotoCheck[],
+    previewUrl: string,
+    spec: CountryPhotoSpec,
+  ) {
+    setPhase({ step: "fixing", previewUrl, spec });
     void trackEvent({ name: "photo_fix_requested", destination: country });
     const form = new FormData();
     form.set("photo", file);
@@ -66,10 +81,61 @@ export function PhotoTool({ country }: { country: string }) {
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       void trackEvent({ name: "photo_fix_completed", destination: country });
-      setPhase({ step: "fixed", fixedUrl: url, previewUrl });
+      setPhase({ step: "fixed", fixedUrl: url, previewUrl, spec });
     } catch {
       alert("Network error — could not fix photo.");
       setPhase({ step: "idle" });
+    }
+  }
+
+  /**
+   * Generate and download a 4×6" printable sheet of the fixed photo.
+   * Lazy-imports both @react-pdf/renderer and the print-sheet component
+   * to keep the main bundle small — this code path runs only after the
+   * user has chosen to download a sheet.
+   */
+  async function onDownloadPrintSheet() {
+    if (phase.step !== "fixed") return;
+    setPrintBusy(true);
+    try {
+      // Read the fixed-photo Blob URL into a base64 data URL — react-pdf
+      // needs an embeddable string, not a blob: URL it would have to fetch.
+      const res = await fetch(phase.fixedUrl);
+      const blob = await res.blob();
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(blob);
+      });
+
+      const { pdf } = await import("@react-pdf/renderer");
+      const { PrintSheetPdf } = await import("@/lib/photo/print-sheet");
+
+      const documentLabel = `${phase.spec.country} ${phase.spec.widthMm}×${phase.spec.heightMm}mm`;
+
+      const pdfBlob = await pdf(
+        <PrintSheetPdf
+          photoSrc={dataUrl}
+          widthMm={phase.spec.widthMm}
+          heightMm={phase.spec.heightMm}
+          documentLabel={documentLabel}
+        />,
+      ).toBlob();
+
+      const downloadUrl = URL.createObjectURL(pdfBlob);
+      const a = document.createElement("a");
+      a.href = downloadUrl;
+      a.download = `visa-photo-print-sheet-${phase.spec.country.toLowerCase()}.pdf`;
+      a.click();
+      URL.revokeObjectURL(downloadUrl);
+
+      void trackEvent({ name: "export_pdf", destination: country });
+    } catch (err) {
+      console.error("Print sheet generation failed:", err);
+      alert("Print sheet generation failed. Please try again.");
+    } finally {
+      setPrintBusy(false);
     }
   }
 
@@ -123,7 +189,7 @@ export function PhotoTool({ country }: { country: string }) {
               const failures = phase.report.checks.filter(
                 (c) => c.status === "fail" && c.fixable,
               );
-              onFix(phase.file, failures, phase.previewUrl);
+              onFix(phase.file, failures, phase.previewUrl, phase.report.spec);
             }}
             onRetry={() => {
               setPhase({ step: "idle" });
@@ -144,11 +210,18 @@ export function PhotoTool({ country }: { country: string }) {
             <p className="text-sm font-medium text-verdict-ok">
               Photo has been fixed. Review and download below.
             </p>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button asChild>
                 <a href={phase.fixedUrl} download="fixed-visa-photo.jpg">
                   Download fixed photo
                 </a>
+              </Button>
+              <Button
+                variant="accent"
+                onClick={onDownloadPrintSheet}
+                disabled={printBusy}
+              >
+                {printBusy ? "Generating sheet…" : "Download printable 4×6 sheet"}
               </Button>
               <Button
                 variant="outline"
@@ -160,6 +233,11 @@ export function PhotoTool({ country }: { country: string }) {
                 Start over
               </Button>
             </div>
+            <p className="text-xs text-muted-foreground">
+              Print the sheet at any drugstore (CVS, Walgreens, Walmart) or
+              online photo service for ~$0.20–$0.50 instead of $15+ at a
+              passport-photo store.
+            </p>
           </div>
         )}
       </CardContent>
