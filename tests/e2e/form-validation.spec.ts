@@ -230,13 +230,15 @@ test.describe('Visa Form - Validation', () => {
 
   test.describe('Accessibility and Keyboard Navigation', () => {
     test('should navigate form using keyboard', async ({ page }) => {
-      // Tab through form fields
-      await page.keyboard.press('Tab'); // Focus on destination
-      await page.keyboard.press('Tab'); // Focus on residence
-      await page.keyboard.press('Tab'); // Focus on passport
-      await page.keyboard.press('Tab'); // Focus on days
+      // Anchor on the first form field rather than the document root —
+      // any tabbable element added before the form (header link, theme
+      // toggle, etc.) would otherwise shift the count and make this
+      // test order-dependent under parallel hydration timing.
+      await page.locator('#destination').focus();
+      await page.keyboard.press('Tab'); // residence
+      await page.keyboard.press('Tab'); // passport
+      await page.keyboard.press('Tab'); // days
 
-      // Verify days input is focused
       await expect(page.locator('#days')).toBeFocused();
     });
 

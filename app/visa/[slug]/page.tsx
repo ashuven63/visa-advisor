@@ -17,6 +17,12 @@ import {
   EDITORIAL_AUTHOR,
   formatReviewDate,
 } from "@/lib/editorial";
+import {
+  getCorridorPolicy,
+  verdictLabel,
+  verdictSentence,
+  verdictTone,
+} from "@/lib/visa-policy";
 
 export const dynamicParams = false;
 // Regenerate at most hourly so wait-time data refreshes after the nightly cron.
@@ -35,8 +41,13 @@ export async function generateMetadata({
   const corridor = getCorridorBySlug(slug);
   if (!corridor) return {};
 
-  const title = `${corridor.passport} passport to ${corridor.destination} — Visa requirements`;
-  const description = `Do ${corridor.passport} citizens need a visa for ${corridor.destination}? Check requirements, documents, processing times, and photo specs — with official citations.`;
+  const policy = getCorridorPolicy(corridor.passportCode, corridor.destinationCode);
+  const verdictTag = policy ? ` (${verdictLabel(policy.verdict)})` : "";
+
+  const title = `${corridor.passport} passport to ${corridor.destination} — Visa requirements${verdictTag}`;
+  const description = policy
+    ? `${verdictSentence(policy.verdict, corridor.passport, corridor.destination)} See documents, current processing times, fees, and photo specs — with official citations.`
+    : `Do ${corridor.passport} citizens need a visa for ${corridor.destination}? Check requirements, documents, processing times, and photo specs — with official citations.`;
 
   return {
     title,
@@ -59,11 +70,14 @@ export default async function CorridorPage({
 
   const photoCorridor = getBestPhotoCorridorForDestination(corridor.destinationCode);
   const waitTime = await getCorridorWaitTime(corridor.destinationCode, "tourist");
+  const policy = getCorridorPolicy(corridor.passportCode, corridor.destinationCode);
 
   const faqEntries: { q: string; a: string }[] = [
     {
       q: `Do ${corridor.passport} citizens need a visa for ${corridor.destination}?`,
-      a: `Use Visa Advisor to check the latest visa requirements for ${corridor.passport} passport holders traveling to ${corridor.destination}. Results include official citations, required documents, and processing times.`,
+      a: policy
+        ? `${verdictSentence(policy.verdict, corridor.passport, corridor.destination)} ${policy.feeUsd ? `Indicative tourist visa fee: about US$${policy.feeUsd}.` : ""} Verify the latest rules with the official source before booking.`
+        : `Use Visa Advisor to check the latest visa requirements for ${corridor.passport} passport holders traveling to ${corridor.destination}. Results include official citations, required documents, and processing times.`,
     },
     {
       q: `What documents do I need to travel from ${corridor.passport} to ${corridor.destination}?`,
@@ -198,6 +212,14 @@ export default async function CorridorPage({
             .
           </p>
         </header>
+
+        {policy && (
+          <VerdictCard
+            policy={policy}
+            corridor={corridor}
+            checkUrl={checkUrl}
+          />
+        )}
 
         <div className="rounded-2xl border border-border bg-card p-6">
           <h2 className="font-display text-xl font-medium">
@@ -375,5 +397,82 @@ export default async function CorridorPage({
         <DisclaimerBanner className="opacity-80 text-xs" />
       </div>
     </main>
+  );
+}
+
+const VERDICT_CARD_TONES = {
+  ok: {
+    border: "border-emerald-200 dark:border-emerald-900",
+    background: "bg-emerald-50/70 dark:bg-emerald-950/30",
+    badge: "bg-emerald-500 text-white",
+  },
+  warn: {
+    border: "border-amber-200 dark:border-amber-900",
+    background: "bg-amber-50/70 dark:bg-amber-950/30",
+    badge: "bg-amber-500 text-white",
+  },
+  stop: {
+    border: "border-rose-200 dark:border-rose-900",
+    background: "bg-rose-50/70 dark:bg-rose-950/30",
+    badge: "bg-rose-500 text-white",
+  },
+} as const;
+
+function VerdictCard({
+  policy,
+  corridor,
+  checkUrl,
+}: {
+  policy: ReturnType<typeof getCorridorPolicy>;
+  corridor: { passport: string; destination: string };
+  checkUrl: string;
+}) {
+  if (!policy) return null;
+  const tone = verdictTone(policy.verdict);
+  const styles = VERDICT_CARD_TONES[tone];
+  return (
+    <div
+      className={`rounded-2xl border p-6 ${styles.border} ${styles.background}`}
+    >
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex flex-col gap-2">
+          <span
+            className={`inline-flex w-fit items-center rounded-full px-3 py-1 text-xs font-medium uppercase tracking-wider ${styles.badge}`}
+          >
+            {verdictLabel(policy.verdict)}
+          </span>
+          <p className="font-display text-2xl font-medium leading-snug">
+            {verdictSentence(policy.verdict, corridor.passport, corridor.destination)}
+          </p>
+        </div>
+        {typeof policy.feeUsd === "number" && (
+          <div className="text-right">
+            <div className="font-display text-2xl font-medium">
+              ~US${policy.feeUsd}
+            </div>
+            <div className="text-xs uppercase tracking-wider text-muted-foreground">
+              Indicative tourist fee
+            </div>
+          </div>
+        )}
+      </div>
+      <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
+        <Button asChild size="sm">
+          <Link href={checkUrl}>Run the personalized check</Link>
+        </Button>
+        <a
+          href={policy.officialUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-brand-600 hover:underline dark:text-brand-400"
+        >
+          Official source &rarr;
+        </a>
+      </div>
+      <p className="mt-3 text-xs text-muted-foreground">
+        Verdict and fee are indicative and may change. Always verify with the
+        official source before booking or filing an application.
+      </p>
+    </div>
   );
 }
