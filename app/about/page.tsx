@@ -70,6 +70,120 @@ export default function AboutPage() {
           </ul>
 
           <h2 className="font-display text-lg font-medium">
+            Sources we monitor
+          </h2>
+          <p>
+            Every fact we surface ties back to a primary government source.
+            The links below open in a new tab and are also cited on each
+            corridor page where the data appears.
+          </p>
+          <div className="flex flex-col gap-3">
+            <h3 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
+              Live processing wait-time feeds
+            </h3>
+            <ul className="list-disc pl-5">
+              <li>
+                <a
+                  className="underline"
+                  href="https://travel.state.gov/content/travel/en/us-visas/visa-information-resources/global-visa-wait-times.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  US Department of State — global visa wait times
+                </a>
+              </li>
+              <li>
+                <a
+                  className="underline"
+                  href="https://www.gov.uk/visa-processing-times"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  UK Government — visa processing times
+                </a>
+              </li>
+              <li>
+                <a
+                  className="underline"
+                  href="https://www.canada.ca/en/immigration-refugees-citizenship/services/application/check-processing-times.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Immigration, Refugees and Citizenship Canada (IRCC)
+                </a>
+              </li>
+              <li>
+                <a
+                  className="underline"
+                  href="https://immi.homeaffairs.gov.au/visas/getting-a-visa/visa-processing-times"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Australian Department of Home Affairs
+                </a>
+              </li>
+              <li>
+                <a
+                  className="underline"
+                  href="https://www.immigration.govt.nz/about-us/our-strategies-and-projects/processing-times"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Immigration New Zealand
+                </a>
+              </li>
+            </ul>
+          </div>
+          <div className="flex flex-col gap-3">
+            <h3 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
+              Visa-policy authorities (verdicts and fees)
+            </h3>
+            <p className="text-muted-foreground">
+              Each corridor page links directly to the destination&apos;s
+              official visa-information page in the &quot;Sources used&quot;
+              footer. Examples we monitor regularly include{" "}
+              <a
+                className="underline"
+                href="https://travel.state.gov/content/travel/en/us-visas.html"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                travel.state.gov
+              </a>
+              ,{" "}
+              <a
+                className="underline"
+                href="https://www.gov.uk/check-uk-visa"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                gov.uk
+              </a>
+              ,{" "}
+              <a
+                className="underline"
+                href="https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada.html"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                canada.ca
+              </a>
+              ,{" "}
+              <a
+                className="underline"
+                href="https://immi.homeaffairs.gov.au/visas/getting-a-visa"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                immi.homeaffairs.gov.au
+              </a>
+              , and the consulate or embassy site for each destination we
+              cover. Where a destination publishes an official photo standard
+              we cite that document on the corresponding photo page.
+            </p>
+          </div>
+
+          <h2 className="font-display text-lg font-medium">
             How the photo tool works
           </h2>
           <ul className="list-disc pl-5">

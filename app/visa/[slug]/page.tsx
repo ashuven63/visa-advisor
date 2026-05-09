@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { StructuredData } from "@/components/structured-data";
 import { DisclaimerBanner } from "@/components/disclaimer-banner";
+import { PassportSwitcher } from "@/components/passport-switcher";
+import { SourcesBlock } from "@/components/sources-block";
 import { CORRIDORS, getCorridorBySlug } from "@/lib/corridors";
 import { getBestPhotoCorridorForDestination } from "@/lib/photo-corridors";
 import { AdSlot } from "@/components/ad-slot";
@@ -107,15 +109,24 @@ export default async function CorridorPage({
   };
 
   const pageUrl = `https://www.visahint.com/visa/${corridor.slug}`;
+  const reviewedAtIso = `${VISA_CORRIDORS_REVIEWED_AT}T00:00:00Z`;
+  const dateModifiedIso = waitTime ? waitTime.fetchedAt : reviewedAtIso;
+
+  // Article schema lets Google treat corridor pages as editorial YMYL
+  // content (which they are: dated, reviewed, authored) rather than
+  // generic landing pages — improves E-E-A-T signal weight.
   const pageSchema = {
     "@context": "https://schema.org",
-    "@type": "WebPage",
-    name: `${corridor.passport} passport to ${corridor.destination} — Visa requirements`,
+    "@type": "Article",
+    headline: `${corridor.passport} passport to ${corridor.destination} — Visa requirements`,
+    description: policy
+      ? verdictSentence(policy.verdict, corridor.passport, corridor.destination)
+      : `Visa requirements for ${corridor.passport} passport holders traveling to ${corridor.destination}.`,
     url: pageUrl,
-    dateModified: waitTime
-      ? waitTime.fetchedAt
-      : `${VISA_CORRIDORS_REVIEWED_AT}T00:00:00Z`,
-    lastReviewed: `${VISA_CORRIDORS_REVIEWED_AT}T00:00:00Z`,
+    mainEntityOfPage: pageUrl,
+    image: [`${pageUrl}/opengraph-image`],
+    datePublished: reviewedAtIso,
+    dateModified: dateModifiedIso,
     author: {
       "@type": "Organization",
       name: EDITORIAL_AUTHOR.name,
@@ -125,7 +136,23 @@ export default async function CorridorPage({
       "@type": "Organization",
       name: "VisaHint",
       url: "https://www.visahint.com",
+      logo: {
+        "@type": "ImageObject",
+        url: "https://www.visahint.com/opengraph-image",
+      },
     },
+    isAccessibleForFree: true,
+    inLanguage: "en",
+    // Cite the official source so Google can verify our fact-checking.
+    ...(policy
+      ? {
+          citation: {
+            "@type": "CreativeWork",
+            name: `${corridor.destination} official visa information`,
+            url: policy.officialUrl,
+          },
+        }
+      : {}),
   };
 
   const breadcrumbSchema = {
@@ -212,6 +239,8 @@ export default async function CorridorPage({
             .
           </p>
         </header>
+
+        <PassportSwitcher currentCorridor={corridor} />
 
         {policy && (
           <VerdictCard
@@ -392,6 +421,12 @@ export default async function CorridorPage({
             </div>
           </div>
         )}
+        <SourcesBlock
+          policy={policy}
+          waitTime={waitTime}
+          destination={corridor.destination}
+        />
+
         <AdSlot slot="9668696980" format="horizontal" className="my-2" />
 
         <DisclaimerBanner className="opacity-80 text-xs" />
