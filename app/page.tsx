@@ -3,6 +3,7 @@ import { VisaForm } from "@/components/visa-form";
 import { DisclaimerBanner } from "@/components/disclaimer-banner";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AdSlot } from "@/components/ad-slot";
+import { PopularCorridors } from "@/components/popular-corridors";
 import {
   StructuredData,
   HOME_FAQ_SCHEMA,
@@ -33,6 +34,8 @@ export default function Home() {
         </header>
 
         <VisaForm />
+
+        <PopularCorridors />
 
         <AdSlot slot="3294860321" format="horizontal" className="my-2" />
 
