@@ -18,7 +18,17 @@ type AnalyticsEvent =
   | { name: "export_email"; destination: string }
   | { name: "export_share_link"; destination: string }
   | { name: "exit_intent_shown"; destination: string }
-  | { name: "exit_intent_affiliate_click"; destination: string };
+  | { name: "exit_intent_affiliate_click"; destination: string }
+  | {
+      /**
+       * Fired when a user clicks an affiliate link from a placement
+       * other than the exit-intent overlay (e.g. the results page).
+       */
+      name: "affiliate_click";
+      partner: string;
+      placement: string;
+      destination: string;
+    };
 
 /**
  * Track a product event. Safe to call from client code — it dynamically

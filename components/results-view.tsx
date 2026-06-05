@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { countryName } from "@/lib/countries";
 import { ExportBar } from "@/components/export-bar";
+import { AffiliateBlock } from "@/components/affiliate-block";
 import { trackEvent } from "@/lib/analytics";
 import {
   type VisaAdviceInput,
@@ -213,6 +214,11 @@ function ResultsBody({ input, data }: { input: VisaAdviceInput; data: VisaAdvice
       {data.documents.length > 0 ? (
         <DocumentsCard documents={data.documents} />
       ) : null}
+
+      <AffiliateBlock
+        verdict={data.verdict}
+        destination={input.destination}
+      />
 
       <CitationsCard
         citations={data.citations}
