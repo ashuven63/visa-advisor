@@ -83,7 +83,7 @@ export default async function CorridorPage({
     {
       q: `Do ${corridor.passport} citizens need a visa for ${corridor.destination}?`,
       a: policy
-        ? `${verdictSentence(policy.verdict, corridor.passport, corridor.destination)} ${policy.feeUsd ? `Indicative tourist visa fee: about US$${policy.feeUsd}.` : ""} Verify the latest rules with the official source before booking.`
+        ? `${verdictSentence(policy.verdict, corridor.passport, corridor.destination)} ${policy.feeUsd ? `Indicative ${policy.verdict === "eta" ? "travel authorization" : "tourist visa"} fee: about US$${policy.feeUsd}.` : ""} Verify the latest rules with the official source before booking.`
         : `Use Visa Advisor to check the latest visa requirements for ${corridor.passport} passport holders traveling to ${corridor.destination}. Results include official citations, required documents, and processing times.`,
     },
     {
@@ -491,7 +491,9 @@ function VerdictCard({
               ~US${policy.feeUsd}
             </div>
             <div className="text-xs uppercase tracking-wider text-muted-foreground">
-              Indicative tourist fee
+              {policy.verdict === "eta"
+                ? "Indicative authorization fee"
+                : "Indicative tourist fee"}
             </div>
           </div>
         )}

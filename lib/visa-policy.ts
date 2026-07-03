@@ -13,6 +13,9 @@
  *   - `byPassport` overrides the verdict for specific passports.
  *   - `defaultFeeUsd` is the typical tourist visa fee when the verdict
  *     is "required" / "evisa" / "voa". Indicative only.
+ *   - `etaFeeUsd` is the electronic travel authorization fee used when
+ *     the verdict is "eta" (e.g. US ESTA, UK ETA). ETAs are much cheaper
+ *     than visas, so they must never fall back to the visa fee.
  *   - `officialUrl` is the destination's canonical visa info page.
  *
  * IMPORTANT: encode only well-known, stable rules. Wrong data is
@@ -43,6 +46,10 @@ export interface DestinationPolicy {
   defaultFeeUsd?: number;
   /** Per-passport fee overrides. */
   feeByPassport?: Partial<Record<string, number>>;
+  /** Indicative ETA fee in USD, used only for "eta" verdicts. */
+  etaFeeUsd?: number;
+  /** Per-passport ETA fee overrides. 0 means the authorization is free. */
+  etaFeeByPassport?: Partial<Record<string, number>>;
   /** Canonical official visa info page for this destination. */
   officialUrl: string;
   /** Confidence in the encoded rules. We only render verdicts when "high". */
@@ -118,6 +125,7 @@ export const DESTINATION_POLICIES: Record<string, DestinationPolicy> = {
       { CA: "not_required", BM: "not_required" },
     ),
     defaultFeeUsd: 185, // B1/B2 MRV fee
+    etaFeeUsd: 21, // ESTA
     officialUrl: "https://travel.state.gov/content/travel/en/us-visas.html",
     confidence: "high",
   },
@@ -130,6 +138,7 @@ export const DESTINATION_POLICIES: Record<string, DestinationPolicy> = {
       fromSet(SCHENGEN_VISA_FREE, "eta"),
     ),
     defaultFeeUsd: 150, // Standard Visitor visa
+    etaFeeUsd: 20, // UK ETA, £16
     officialUrl: "https://www.gov.uk/check-uk-visa",
     confidence: "high",
   },
@@ -143,6 +152,7 @@ export const DESTINATION_POLICIES: Record<string, DestinationPolicy> = {
       { US: "not_required" },
     ),
     defaultFeeUsd: 75, // Visitor Visa
+    etaFeeUsd: 5, // eTA, CAD 7
     officialUrl:
       "https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada.html",
     confidence: "high",
@@ -156,6 +166,13 @@ export const DESTINATION_POLICIES: Record<string, DestinationPolicy> = {
       fromSet(SCHENGEN_VISA_FREE, "eta"),
     ),
     defaultFeeUsd: 130, // Visitor visa (subclass 600)
+    etaFeeUsd: 13, // ETA (subclass 601) app charge, AUD 20
+    // European passports use the free eVisitor (subclass 651) instead.
+    etaFeeByPassport: Object.fromEntries(
+      ["AT","BE","BG","HR","CY","CZ","DK","EE","FI","FR","DE","GR",
+       "HU","IS","IE","IT","LV","LI","LT","LU","MT","NL","NO","PL",
+       "PT","RO","SK","SI","ES","SE","CH","GB"].map((c) => [c, 0]),
+    ),
     officialUrl: "https://immi.homeaffairs.gov.au/visas/getting-a-visa",
     confidence: "high",
   },
@@ -168,6 +185,7 @@ export const DESTINATION_POLICIES: Record<string, DestinationPolicy> = {
       { AU: "not_required" }, // Australians don't need an NZeTA
     ),
     defaultFeeUsd: 200, // Visitor Visa
+    etaFeeUsd: 70, // NZeTA NZD 23 + International Visitor Levy NZD 100
     officialUrl: "https://www.immigration.govt.nz/new-zealand-visas",
     confidence: "high",
   },
@@ -454,7 +472,11 @@ function schengenPolicy(code: string, officialUrl: string): DestinationPolicy {
 
 export interface CorridorPolicy {
   verdict: Verdict;
-  /** Indicative tourist visa fee in USD. May be undefined when not_required. */
+  /**
+   * Indicative fee in USD for whatever the verdict requires: the tourist
+   * visa fee for required/evisa/voa, the ETA fee for eta. Undefined when
+   * not_required or when we don't know the fee.
+   */
   feeUsd?: number;
   /** Canonical official source for the verdict. */
   officialUrl: string;
@@ -473,15 +495,21 @@ export function getCorridorPolicy(
   if (!policy) return null;
   if (policy.confidence !== "high") return null;
 
-  const override = policy.byPassport[passportCode.toUpperCase()];
+  const upperPassport = passportCode.toUpperCase();
+  const override = policy.byPassport[upperPassport];
   const verdict = override ?? policy.defaultVerdict;
 
-  // Fee is only meaningful when a visa is actually needed.
-  const feeUsd =
-    verdict === "not_required"
-      ? undefined
-      : (policy.feeByPassport?.[passportCode.toUpperCase()] ??
-        policy.defaultFeeUsd);
+  // ETAs cost far less than visas, so an "eta" verdict must use the ETA
+  // fee (or none) — never fall back to the tourist visa fee.
+  let feeUsd: number | undefined;
+  if (verdict === "eta") {
+    feeUsd = policy.etaFeeByPassport?.[upperPassport] ?? policy.etaFeeUsd;
+  } else if (verdict !== "not_required") {
+    feeUsd = policy.feeByPassport?.[upperPassport] ?? policy.defaultFeeUsd;
+  }
+  // 0 encodes a free authorization (e.g. Australia's eVisitor) — omit it
+  // rather than render "~US$0".
+  if (feeUsd === 0) feeUsd = undefined;
 
   return {
     verdict,

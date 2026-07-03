@@ -169,9 +169,9 @@ export function corridorDescription(
   }
 
   const parts: string[] = [verdictClause(policy.verdict, demonym, dest)];
-  // feeUsd is the tourist *visa* fee (see DestinationPolicy) — quoting it
-  // next to an ETA verdict would misstate the (much cheaper) ETA cost.
-  if (policy.feeUsd && policy.verdict !== "eta") {
+  // feeUsd is verdict-aware (ETA fee for "eta" verdicts, visa fee
+  // otherwise — see getCorridorPolicy), so it's always safe to quote.
+  if (policy.feeUsd) {
     parts.push(`Fee ~US$${policy.feeUsd}.`);
   }
   if (waitTime) {
