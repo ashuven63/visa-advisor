@@ -25,6 +25,7 @@ import {
   verdictSentence,
   verdictTone,
 } from "@/lib/visa-policy";
+import { corridorTitle, corridorDescription } from "@/lib/seo-meta";
 
 export const dynamicParams = false;
 // Regenerate at most hourly so wait-time data refreshes after the nightly cron.
@@ -44,12 +45,16 @@ export async function generateMetadata({
   if (!corridor) return {};
 
   const policy = getCorridorPolicy(corridor.passportCode, corridor.destinationCode);
-  const verdictTag = policy ? ` (${verdictLabel(policy.verdict)})` : "";
+  const waitTime = await getCorridorWaitTime(corridor.destinationCode, "tourist");
 
-  const title = `${corridor.passport} passport to ${corridor.destination} — Visa requirements${verdictTag}`;
-  const description = policy
-    ? `${verdictSentence(policy.verdict, corridor.passport, corridor.destination)} See documents, current processing times, fees, and photo specs — with official citations.`
-    : `Do ${corridor.passport} citizens need a visa for ${corridor.destination}? Check requirements, documents, processing times, and photo specs — with official citations.`;
+  // Rendered at build/ISR time; `revalidate = 3600` keeps the year current.
+  const title = corridorTitle(corridor, policy, new Date().getFullYear());
+  const description = corridorDescription(
+    corridor,
+    policy,
+    waitTime,
+    VISA_CORRIDORS_REVIEWED_AT,
+  );
 
   return {
     title,
